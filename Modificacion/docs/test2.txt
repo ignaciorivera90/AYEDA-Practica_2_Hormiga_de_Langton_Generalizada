@@ -1,5 +1,5 @@
 7 10 4
-DDIIr 3 8 > ; IDID 5 7 v
+DDIDr 3 8 > ; IDID 5 7 v
 3 4 1
 3 5 2
 5 5 3
