@@ -92,7 +92,7 @@ Ant* Simulator::Factory(const std::string& type, int x, int y, Direction dir, co
   if (type == "DDID") return new Ant_DDID(x, y, dir, ansi);
   if (type == "DDII") return new Ant_DDII(x, y, dir, ansi);
   if (type == "IDID") return new Ant_IDID(x, y, dir, ansi);
-  if (type == "IDIDr") return new Ant_DDID_INV(x, y, dir, ansi);
+  if (type == "DDIDr") return new Ant_DDID_INV(x, y, dir, ansi);
   throw std::runtime_error("Unknown ant type: " + type);
 }
 
