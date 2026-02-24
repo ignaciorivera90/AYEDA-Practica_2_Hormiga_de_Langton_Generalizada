@@ -39,7 +39,7 @@
  */
 void Ant_DDID_INV::Step(Tape& tape) {
   uint8_t c = tape.GetColor(x_, y_);  // 0..3
-  if (invertido_) {
+  if (!invertido_) {
     if (c == 0)      TurnRight(); 
     else if (c == 1) TurnRight(); 
     else if (c == 2) TurnLeft();  
