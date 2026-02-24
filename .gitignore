@@ -1,0 +1,13 @@
+# Object files
+*.o
+*.obj
+
+# Executables (Linux / Mac)
+a.out
+*.out
+*.exe
+
+# Si tu ejecutable tiene nombre fijo (ejemplo)
+programa
+main
+app
