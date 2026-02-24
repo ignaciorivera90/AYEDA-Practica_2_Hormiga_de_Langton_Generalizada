@@ -12,7 +12,7 @@ class Simulator {
   Simulator(const Simulator&) = delete;
   Simulator& operator=(const Simulator&) = delete;
 
-  void Run();  // <- ahora menú interactivo
+  void Run(); 
 
  private:
   void LoadFromFile(const std::string& input_file);
@@ -36,5 +36,16 @@ class Simulator {
   Tape tape_;
   std::vector<Ant*> ants_;
   long long steps_done_{0};
+
+  // helpers 
+  int ReadInt(const std::string& msg) const;
+  unsigned long ReadULong(const std::string& msg) const;
+  std::string ReadLine(const std::string& msg) const;
+  int ReadUserActionStep() const;   // ENTER => continuar, 'q' => volver
   bool AskYesNo(const std::string& msg) const;
+
+  bool Finished() const { return finished_; }
+  void MarkFinished() { finished_ = true; }
+
+  bool finished_{false};
 };

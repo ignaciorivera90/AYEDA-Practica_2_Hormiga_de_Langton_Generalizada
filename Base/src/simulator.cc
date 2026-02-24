@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <limits>
+#include <cctype>
 
 // hormigas concretas
 #include "ant_di.h"
@@ -214,120 +215,212 @@ void Simulator::SaveToFile(const std::string& output_file) const {
 void Simulator::MenuLoop() {
   while (true) {
     ClearScreen();
-    Print();
 
-    std::cout << CYAN << "===== PRACTICA 2 MENU =====" << RESET << "\n";
-    std::cout << "1) Step (1 paso)\n";
-    std::cout << "2) Run N steps\n";
-    std::cout << "3) Run until out\n";
-    std::cout << "4) Save state\n";
-    std::cout << "0) Exit\n";
+    std::cout << "\n===== Hormiga de Langton =====\n";
+    std::cout << "1) Mostrar estado actual del mundo\n";
+    std::cout << "2) Mostrar recorrido paso a paso (ENTER / q)\n";
+    std::cout << "3) Ejecutar n pasos\n";
+    std::cout << "4) Guardar estado\n";
+    std::cout << "0) Salir\n";
+    std::cout << "==================================\n";
 
-    int opt = AskInt("Option: ", 0, 4);
+    int op = ReadInt("Introduce un numero > ");
+    ClearScreen();
 
-    if (opt == 0) {
-      // limpiar el buffer por si AskInt dejó algo (normalmente ya lo hace)
-      // pero lo dejamos por seguridad
-      // std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-      if (AskYesNo("Are you sure you want to exit? (s/n): ")) {
-        ClearScreen();
-        return;  // salir del menú y terminar Run()
-      }
-      continue; // vuelve al menú
-    }
-
-    if (opt == 1) {
-      try {
-        StepAll();
-      } catch (const std::out_of_range&) {
-        std::cout << RED << "\nFin: una hormiga salio del tablero.\n" << RESET;
-        PressAnyKey();
-      }
-      PressAnyKey();
-      continue;
-    }
-
-    if (opt == 2) {
-      int n = AskInt("How many steps? ", 1, 1000000);
-
-      for (int i = 0; i < n; ++i) {
-        ClearScreen();
-        Print();
-
-        // Muestra contador del bucle también si quieres
-        std::cout << GRAY << "Run N steps: " << (i + 1) << "/" << n << RESET << "\n";
-
-        PressAnyKey();  // <-- pausa paso a paso
-
-        try {
-          StepAll();
-        } catch (const std::out_of_range&) {
-          std::cout << RED << "\nFin: una hormiga salio del tablero.\n" << RESET;
-          PressAnyKey();
-          break;
-        }
-      }
-
-      ClearScreen();
+    if (op == 1) {
       Print();
-      PressAnyKey();
+      std::cout << "\nPulsa ENTER para continuar...";
+      std::string dummy;
+      std::getline(std::cin, dummy);
       continue;
     }
 
-    if (opt == 3) {
+    if (op == 2) {
       while (true) {
         ClearScreen();
         Print();
-        std::cout << GRAY << "Run until out (ENTER = next step)" << RESET << "\n";
-        PressAnyKey();  // <-- pausa paso a paso
+        std::cout << "\nPulsa ENTER para el siguiente paso, o 'q' + ENTER para volver al menu: ";
+        int action = ReadUserActionStep();
 
+        if (action == 1) {  // q
+          break;
+        } else if (action == 2) {  // ENTER
+          try {
+            StepAll();
+          } catch (const std::out_of_range&) {
+            MarkFinished();
+          }
+        } else {
+          ClearScreen();
+          std::cout << "Opcion no valida.\n";
+          std::cout << "Pulsa ENTER para continuar...";
+          std::string dummy;
+          std::getline(std::cin, dummy);
+          continue;
+        }
+
+        if (Finished()) {
+          ClearScreen();
+          Print();
+          std::cout << "\n[FIN] Simulacion terminada.\n";
+
+          if (AskYesNo("¿Deseas guardar el estado final?")) {
+            std::string out = ReadLine("Fichero de salida: ");
+            if (!out.empty()) SaveToFile(out);
+          }
+
+          std::cout << "Pulsa ENTER para salir...";
+          std::string dummy;
+          std::getline(std::cin, dummy);
+          return;
+        }
+      }
+      continue;
+    }
+
+    if (op == 3) {
+      unsigned long n = ReadULong("N pasos: ");
+
+      for (unsigned long i = 0; i < n && !Finished(); ++i) {
         try {
           StepAll();
         } catch (const std::out_of_range&) {
-          std::cout << RED << "\nFin: una hormiga salio del tablero.\n" << RESET;
-          PressAnyKey();
-          break;
+          MarkFinished();
         }
       }
 
+      if (Finished()) {
+        ClearScreen();
+        Print();
+        std::cout << "\n[FIN] Simulacion terminada.\n";
+
+        if (AskYesNo("¿Deseas guardar el estado final?")) {
+          std::string out = ReadLine("Fichero de salida: ");
+          if (!out.empty()) SaveToFile(out);
+        }
+
+        std::cout << "Pulsa ENTER para salir...";
+        std::string dummy;
+        std::getline(std::cin, dummy);
+        return;
+      }
+
+      // tras N pasos, mostrar donde quedó y volver al menú
       ClearScreen();
       Print();
-      PressAnyKey();
+      std::cout << "\nPulsa ENTER para continuar y volver al menu...";
+      std::string dummy;
+      std::getline(std::cin, dummy);
       continue;
     }
 
-    if (opt == 4) {
-      std::string outname = AskString("Output filename: ");
-      try {
-        SaveToFile(outname);
-        std::cout << GREEN << "Saved to " << outname << RESET << "\n";
-      } catch (const std::exception& e) {
-        std::cout << RED << "Save error: " << e.what() << RESET << "\n";
+    if (op == 4) {
+      ClearScreen();
+      Print();
+      std::string out = ReadLine("\nFichero de salida: ");
+
+      if (out.empty()) {
+        std::cout << "Nombre vacio. No se guarda.\n";
+      } else {
+        SaveToFile(out);
+        std::cout << "Estado guardado en '" << out << "'\n";
       }
-      PressAnyKey();
+
+      std::cout << "Pulsa ENTER para volver al menu...";
+      std::string dummy;
+      std::getline(std::cin, dummy);
       continue;
     }
+
+    if (op == 0) {
+      ClearScreen();
+      Print();
+
+      if (AskYesNo("\n¿Deseas guardar el estado final antes de salir?")) {
+        std::string out = ReadLine("Fichero de salida: ");
+        if (!out.empty()) {
+          SaveToFile(out);
+          std::cout << "Estado guardado en '" << out << "'\n";
+        }
+      }
+
+      std::cout << "Pulsa ENTER para salir...";
+      std::string dummy;
+      std::getline(std::cin, dummy);
+      return;
+    }
+
+    ClearScreen();
+    Print();
+    std::cout << "\nOpcion no valida.\n";
+    std::cout << "Pulsa ENTER para continuar...";
+    std::string dummy;
+    std::getline(std::cin, dummy);
   }
 }
 
 void Simulator::Run() {
-  ClearScreen();
-  Print();
+  finished_ = false;
   MenuLoop();
+}
+
+// Lee int con mensaje (sin rango, como práctica 1)
+int Simulator::ReadInt(const std::string& msg) const {
+  while (true) {
+    std::cout << msg;
+    std::string line;
+    std::getline(std::cin, line);
+    if (line.empty()) continue;
+
+    std::istringstream iss(line);
+    int v;
+    if (iss >> v) return v;
+
+    std::cout << RED << "Entrada no valida.\n" << RESET;
+  }
+}
+
+unsigned long Simulator::ReadULong(const std::string& msg) const {
+  while (true) {
+    std::cout << msg;
+    std::string line;
+    std::getline(std::cin, line);
+    if (line.empty()) continue;
+
+    std::istringstream iss(line);
+    unsigned long v;
+    if (iss >> v) return v;
+
+    std::cout << RED << "Entrada no valida.\n" << RESET;
+  }
+}
+
+std::string Simulator::ReadLine(const std::string& msg) const {
+  std::cout << msg;
+  std::string s;
+  std::getline(std::cin, s);
+  return s;
+}
+
+// Devuelve: 1 => Quit (q), 2 => ENTER, 0 => invalido
+int Simulator::ReadUserActionStep() const {
+  std::string line;
+  std::getline(std::cin, line);
+
+  if (line.empty()) return 2; // solo ENTER
+  if (line.size() == 1 && (line[0] == 'q' || line[0] == 'Q')) return 1;
+  return 0;
 }
 
 bool Simulator::AskYesNo(const std::string& msg) const {
   while (true) {
-    std::cout << msg;
-    std::string s;
-    std::getline(std::cin, s);
-    if (s.empty()) continue;
-
-    char c = s[0];
-    if (c == 's' || c == 'S' || c == 'y' || c == 'Y') return true;
+    std::cout << msg << " (s/n): ";
+    std::string line;
+    std::getline(std::cin, line);
+    if (line.empty()) continue;
+    char c = line[0];
+    if (c == 's' || c == 'S') return true;
     if (c == 'n' || c == 'N') return false;
-
-    std::cout << RED << "Please answer with 's' or 'n'.\n" << RESET;
+    std::cout << RED << "Respuesta no valida.\n" << RESET;
   }
 }
