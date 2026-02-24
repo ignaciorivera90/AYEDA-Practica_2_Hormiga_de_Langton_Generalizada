@@ -1,3 +1,27 @@
+/**
+ * Universidad de La Laguna
+ * Escuela Superior de Ingenieria y Tecnologia
+ * Grado en Ingenieria Informatica
+ * Asignatura: Algoritmos y Estructuras de Datos Avanzadas
+ * Curso: 2º
+ * Practica 2: Hormiga de Langton Generalizada
+ *
+ * Autor: Ignacio Andres Rivera Barrientos
+ * Correo: alu0101675053@ull.edu.es
+ * Fecha: 22/02/2026
+ *
+ * Archivo: simulator.h
+ * Descripcion: Declaracion de la clase Simulator.
+ *              Coordina la simulacion, el menu interactivo,
+ *              la gestion de hormigas y la carga/guardado de estado.
+ * Referencias:
+ *   - Enunciado oficial de la practica 2.
+ *   - Documentacion de C++ (std::vector, std::string, etc.).
+ *
+ * Historial de revisiones:
+ *   22/02/2026 - Creacion inicial de la practica 2.
+ */
+
 #pragma once
 #include <vector>
 #include <string>

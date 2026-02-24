@@ -1,3 +1,26 @@
+/**
+ * Universidad de La Laguna
+ * Escuela Superior de Ingenieria y Tecnologia
+ * Grado en Ingenieria Informatica
+ * Asignatura: Algoritmos y Estructuras de Datos Avanzadas
+ * Curso: 2º
+ * Practica 2: Hormiga de Langton Generalizada
+ *
+ * Autor: Ignacio Andres Rivera Barrientos
+ * Correo: alu0101675053@ull.edu.es
+ * Fecha: 22/02/2026
+ *
+ * Archivo: simulator.cc
+ * Descripcion: Implementacion del motor principal de la simulacion,
+ *              incluyendo menu, ejecucion paso a paso y gestion de eventos.
+ * Referencias:
+ *   - Enunciado oficial de la practica 2.
+ *   - Documentacion de C++ (std::vector, std::string, etc.).
+ *
+ * Historial de revisiones:
+ *   22/02/2026 - Creacion inicial de la practica 2.
+ */
+
 #include "simulator.h"
 #include "colors.h"
 #include <iostream>
@@ -13,15 +36,38 @@
 #include "ant_ddii.h"
 #include "ant_idid.h"
 
+
+
+/**
+ * @brief Builds a simulation reading the initial state from a file.
+ * @param input_file Input file path.
+ * @throws std::runtime_error if the file cannot be opened or the format is invalid.
+ */
 Simulator::Simulator(const std::string& input_file) {
   LoadFromFile(input_file);
 }
 
+
+
+/**
+ * @brief Destroys the simulator and releases all dynamically allocated ants.
+ *
+ * This class stores ants as raw pointers (Ant*), so it is responsible
+ * for deleting them to avoid memory leaks.
+ */
 Simulator::~Simulator() {
   for (Ant* a : ants_) delete a;
   ants_.clear();
 }
 
+
+
+/**
+ * @brief Converts an orientation character into a Direction enum.
+ * @param c Orientation character ('^', 'v', '<', '>').
+ * @return Parsed Direction.
+ * @throws std::runtime_error if the character is not valid.
+ */
 Direction Simulator::ParseDir(char c) {
   switch (c) {
     case '^': return Direction::Up;
@@ -32,7 +78,15 @@ Direction Simulator::ParseDir(char c) {
   }
 }
 
-Ant* Simulator::Factory(const std::string& type, int x, int y, Direction dir, const char* ansi) {  if (type == "DI")   return new Ant_DI(x, y, dir, ansi);
+
+
+/**
+ * @brief Converts an orientation character into a Direction enum.
+ * @param c Orientation character ('^', 'v', '<', '>').
+ * @return Parsed Direction.
+ * @throws std::runtime_error if the character is not valid.
+ */
+Ant* Simulator::Factory(const std::string& type, int x, int y, Direction dir, const char* ansi) {
   if (type == "DI")   return new Ant_DI(x, y, dir, ansi);
   if (type == "DDID") return new Ant_DDID(x, y, dir, ansi);
   if (type == "DDII") return new Ant_DDII(x, y, dir, ansi);
@@ -40,6 +94,18 @@ Ant* Simulator::Factory(const std::string& type, int x, int y, Direction dir, co
   throw std::runtime_error("Unknown ant type: " + type);
 }
 
+
+
+/**
+ * @brief Loads the simulation state from a file.
+ * @param input_file Path to input file.
+ * @throws std::runtime_error if file format is invalid.
+ *
+ * Expected format:
+ *  Line 1: size_x size_y num_colors
+ *  Line 2: TYPE x y ORIENT ; TYPE x y ORIENT ; ...
+ *  Line 3..n: x y color
+ */
 void Simulator::LoadFromFile(const std::string& input_file) {
   std::ifstream in(input_file);
   if (!in) throw std::runtime_error("Cannot open input file: " + input_file);
@@ -93,6 +159,18 @@ void Simulator::LoadFromFile(const std::string& input_file) {
   }
 }
 
+
+
+/**
+ * @brief Creates an ant instance depending on the rule type string.
+ * @param type Ant rule identifier (e.g., "DI", "DDID", "DDII", "IDID").
+ * @param x Initial x position.
+ * @param y Initial y position.
+ * @param dir Initial direction.
+ * @param ansi ANSI color code used to print the ant.
+ * @return Pointer to a dynamically allocated ant (caller owns it).
+ * @throws std::runtime_error if the type is unknown.
+ */
 const char* Simulator::BgForCell(int color) const {
   // mapa simple de fondos; si num_colors > 8, reusa
   switch (color % 8) {
@@ -108,6 +186,15 @@ const char* Simulator::BgForCell(int color) const {
   return BG_WHITE;
 }
 
+
+
+/**
+ * @brief Prints the current world state on screen.
+ * Shows:
+ *  - Cell colors as background.
+ *  - Ants as yellow arrows.
+ *  - '*' if multiple ants share a cell.
+ */
 void Simulator::Print() const {
   // conteo hormigas y referencia primera
   std::vector<std::vector<int>> count(tape_.size_y(), std::vector<int>(tape_.size_x(), 0));
@@ -147,6 +234,12 @@ void Simulator::Print() const {
             << RESET << "\n";
 }
 
+
+
+/**
+ * @brief Executes one step for all ants in the simulation.
+ * @throws std::out_of_range if any ant leaves the board.
+ */
 void Simulator::StepAll() {
   for (Ant* a : ants_) {
     a->Step(tape_);
@@ -154,6 +247,13 @@ void Simulator::StepAll() {
   steps_done_++;
 }
 
+
+
+/**
+ * @brief Clears the terminal screen.
+ *
+ * Uses "cls" on Windows and "clear" on Unix-like systems.
+ */
 void Simulator::ClearScreen() const {
   // Igual que práctica 1 (portable básico)
 #ifdef _WIN32
@@ -163,12 +263,28 @@ void Simulator::ClearScreen() const {
 #endif
 }
 
+
+
+/**
+ * @brief Clears the terminal screen.
+ *
+ * Uses "cls" on Windows and "clear" on Unix-like systems.
+ */
 void Simulator::PressAnyKey() const {
   std::cout << GRAY << "Press ENTER to continue..." << RESET;
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   std::cin.get();
 }
 
+
+
+/**
+ * @brief Reads an integer from standard input within a range.
+ * @param msg Prompt message.
+ * @param minv Minimum allowed value.
+ * @param maxv Maximum allowed value.
+ * @return Valid integer in [minv, maxv].
+ */
 int Simulator::AskInt(const std::string& msg, int minv, int maxv) const {
   while (true) {
     std::cout << msg;
@@ -183,6 +299,13 @@ int Simulator::AskInt(const std::string& msg, int minv, int maxv) const {
   }
 }
 
+
+
+/**
+ * @brief Reads a full line from standard input.
+ * @param msg Prompt message.
+ * @return The read line (may be empty).
+ */
 std::string Simulator::AskString(const std::string& msg) const {
   std::cout << msg;
   std::string s;
@@ -191,6 +314,12 @@ std::string Simulator::AskString(const std::string& msg) const {
   return s;
 }
 
+
+
+/**
+ * @brief Saves the current simulation state to a file.
+ * @param output_file Path to output file.
+ */
 void Simulator::SaveToFile(const std::string& output_file) const {
   std::ofstream out(output_file);
   if (!out) throw std::runtime_error("Cannot open output file: " + output_file);
@@ -212,6 +341,17 @@ void Simulator::SaveToFile(const std::string& output_file) const {
   }
 }
 
+
+
+/**
+ * @brief Main interactive menu loop.
+ * Handles user options:
+ *  1) Show state
+ *  2) Step by step execution
+ *  3) Execute N steps
+ *  4) Save state
+ *  0) Exit
+ */
 void Simulator::MenuLoop() {
   while (true) {
     ClearScreen();
@@ -359,13 +499,27 @@ void Simulator::MenuLoop() {
   }
 }
 
+
+
+/**
+ * @brief Reads a full line from standard input.
+ * @param msg Prompt message.
+ * @return The read line (may be empty).
+ */
 void Simulator::Run() {
   finished_ = false;
   MenuLoop();
 }
 
-// Lee int con mensaje (sin rango, como práctica 1)
-int Simulator::ReadInt(const std::string& msg) const {
+
+
+/**
+ * @brief Reads an integer from standard input using a full line.
+ * @param msg Prompt message.
+ * @return Parsed integer.
+ *
+ * This method keeps asking until a valid integer is provided.
+ */int Simulator::ReadInt(const std::string& msg) const {
   while (true) {
     std::cout << msg;
     std::string line;
@@ -380,6 +534,13 @@ int Simulator::ReadInt(const std::string& msg) const {
   }
 }
 
+
+
+/**
+ * @brief Reads an unsigned long integer from standard input using a full line.
+ * @param msg Prompt message.
+ * @return Parsed unsigned long value.
+ */
 unsigned long Simulator::ReadULong(const std::string& msg) const {
   while (true) {
     std::cout << msg;
@@ -395,6 +556,13 @@ unsigned long Simulator::ReadULong(const std::string& msg) const {
   }
 }
 
+
+
+/**
+ * @brief Reads a complete line from standard input.
+ * @param msg Prompt message.
+ * @return The line read from the user.
+ */
 std::string Simulator::ReadLine(const std::string& msg) const {
   std::cout << msg;
   std::string s;
@@ -402,7 +570,12 @@ std::string Simulator::ReadLine(const std::string& msg) const {
   return s;
 }
 
-// Devuelve: 1 => Quit (q), 2 => ENTER, 0 => invalido
+
+
+/**
+ * @brief Reads the user action in step-by-step mode.
+ * @return 2 if user pressed only ENTER, 1 if user typed 'q' + ENTER, 0 otherwise.
+ */
 int Simulator::ReadUserActionStep() const {
   std::string line;
   std::getline(std::cin, line);
@@ -412,6 +585,13 @@ int Simulator::ReadUserActionStep() const {
   return 0;
 }
 
+
+
+/**
+ * @brief Asks the user a yes/no question.
+ * @param msg Prompt message (without "(s/n)").
+ * @return true if user answers 's'/'S', false if user answers 'n'/'N'.
+ */
 bool Simulator::AskYesNo(const std::string& msg) const {
   while (true) {
     std::cout << msg << " (s/n): ";

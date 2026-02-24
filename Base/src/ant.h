@@ -1,3 +1,28 @@
+/**
+ * Universidad de La Laguna
+ * Escuela Superior de Ingenieria y Tecnologia
+ * Grado en Ingenieria Informatica
+ * Asignatura: Algoritmos y Estructuras de Datos Avanzadas
+ * Curso: 2º
+ * Practica 2: Hormiga de Langton Generalizada
+ *
+ * Autor: Ignacio Andres Rivera Barrientos
+ * Correo: alu0101675053@ull.edu.es
+ * Fecha: 22/02/2026
+ *
+ * Archivo: ant.h
+ * Descripcion: Declaracion de la clase abstracta Ant que representa una
+ *              hormiga generica en la simulacion.
+ *              Define la interfaz comun y el comportamiento basico
+ *              compartido por todas las hormigas derivadas.
+ * Referencias:
+ *   - Enunciado oficial de la practica 2.
+ *   - Documentacion de C++ (std::vector, std::string, etc.).
+ *
+ * Historial de revisiones:
+ *   22/02/2026 - Creacion inicial de la practica 2.
+ */
+
 #pragma once
 #include <string>
 #include <cstdint>
